@@ -1,0 +1,30 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: dotnethello 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dotnethello
+  template:
+    metadata:
+      labels:
+        app: dotnethello 
+    spec:
+      containers:
+        - name: dotnethello 
+          image: coforgeregistry.azurecr.io/dotnet-hello:#{Build.BuildId}
+          ports:
+          - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: dotnethello
+spec:
+    type: LoadBalancer
+    ports:
+    - port: 80 
+    selector:
+        app: dotnethello

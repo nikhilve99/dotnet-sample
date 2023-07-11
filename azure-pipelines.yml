@@ -1,0 +1,62 @@
+# Deploy to Azure Kubernetes Service
+# Build and push image to Azure Container Registry; Deploy to Azure Kubernetes Service
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: '7c86fca6-6852-408b-9061-5f25f8b7abf9'
+  imageRepository: 'dotnethello'
+  containerRegistry: 'coforgeregistry.azurecr.io'
+  dockerfilePath: '**/Dockerfile'
+  tag: '$(Build.BuildId)'
+  imagePullSecret: 'coforgeregistry1906e1a1-auth'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+    - task: CmdLine@2
+      inputs:
+        script: |
+          pwd
+          ls -la manifests
+
+    
+    - task: CmdLine@2
+      inputs:
+        script: |
+          pwd
+          ls -la
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: 'manifests/'
+        Contents: '*.yaml'
+        TargetFolder: '$(Pipeline.Workspace)'
+
+
